@@ -1,234 +1,625 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRA Job Fair 2026 Analytics</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>CRA Job Fair & Education 2026 - Dashboard</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-  <style>
-    body { font-family: 'Noto Sans Thai', sans-serif; background-color: #f1f5f9; }
-    .metric-card { @apply bg-white p-6 rounded-3xl shadow-sm border border-slate-200 transition-all hover:shadow-md; }
-    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #0F2C67; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  </style>
-</head>
-<body class="text-slate-800 antialiased">
-
-  <div id="loading" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center">
-    <div class="loader mb-4"></div>
-    <p class="text-blue-900 font-bold">กำลังคำนวณร้อยละและค่าเฉลี่ย...</p>
-  </div>
-
-  <div id="app" class="max-w-7xl mx-auto px-4 py-8 opacity-0 transition-opacity duration-700">
-    <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-      <div class="text-center md:text-left">
-        <h1 class="text-3xl font-black text-blue-900 tracking-tight">CRA JOB FAIR & EDUCATION 2026</h1>
-        <p class="text-slate-500 font-medium">Analytics Dashboard (ข้อมูลวันที่ 12-13 ก.พ.)</p>
-      </div>
-      
-      <div class="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3">
-        <span class="text-xs font-bold text-slate-400 pl-3 uppercase">กรองวันที่</span>
-        <select id="dateFilter" onchange="updateDashboard()" class="border-none font-bold text-blue-900 focus:ring-0 rounded-xl cursor-pointer">
-          <option value="ALL">ดูภาพรวมทั้ง 2 วัน</option>
-          <option value="12.02.69">12 กุมภาพันธ์ 2569</option>
-          <option value="13.02.69">13 กุมภาพันธ์ 2569</option>
-        </select>
-        <button onclick="window.print()" class="bg-blue-900 text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-blue-800">พิมพ์รายงาน</button>
-      </div>
-    </header>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-      <div class="metric-card">
-        <p class="text-slate-400 text-xs font-bold uppercase mb-2">จำนวนผู้ตอบทั้งหมด</p>
-        <div class="flex items-baseline gap-2">
-          <span class="text-4xl font-black text-blue-900" id="totalCount">0</span>
-          <span class="text-slate-400 font-bold">คน</span>
-        </div>
-      </div>
-      <div class="metric-card bg-blue-900 text-white border-none">
-        <p class="text-blue-200 text-xs font-bold uppercase mb-2">ความพึงพอใจรวม (T)</p>
-        <div class="flex items-baseline gap-2">
-          <span class="text-4xl font-black text-white" id="avgT">0.00</span>
-          <span class="text-blue-300 font-bold">/ 5.00</span>
-        </div>
-      </div>
-      <div class="metric-card">
-        <p class="text-slate-400 text-xs font-bold uppercase mb-2">ร้อยละที่สนใจร่วมปีหน้า (U)</p>
-        <div class="flex items-baseline gap-2">
-          <span class="text-4xl font-black text-emerald-600" id="pctU">0</span>
-          <span class="text-slate-400 font-bold">%</span>
-        </div>
-      </div>
-      <div class="metric-card">
-        <p class="text-slate-400 text-xs font-bold uppercase mb-2">เฉลี่ยความเหมาะสมสถานที่ (P)</p>
-        <div class="flex items-baseline gap-2">
-          <span class="text-4xl font-black text-orange-600" id="avgP">0.00</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-3xl p-8 shadow-sm border mb-10">
-      <h3 class="font-bold text-slate-700 mb-8 border-l-4 border-blue-900 pl-4">ระดับความพึงพอใจเฉลี่ยรายกิจกรรม (เต็ม 5)</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-10" id="scoreSections"></div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-      <div class="bg-white p-8 rounded-3xl shadow-sm border">
-        <h3 class="font-bold text-slate-700 mb-6">ประเภทผู้เข้าร่วม (ร้อยละ)</h3>
-        <div class="h-64"><canvas id="chartType"></canvas></div>
-      </div>
-      <div class="bg-white p-8 rounded-3xl shadow-sm border">
-        <h3 class="font-bold text-slate-700 mb-6">ช่องทางการรับรู้ข่าวสาร (W)</h3>
-        <div id="tableW"></div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <div class="bg-white p-8 rounded-3xl shadow-sm border">
-        <h3 class="font-bold text-blue-900 mb-4">สถานประกอบการที่ได้รับความสนใจสูงสุด</h3>
-        <div id="tableCompany"></div>
-      </div>
-      <div class="bg-white p-8 rounded-3xl shadow-sm border">
-        <h3 class="font-bold text-orange-600 mb-4">บูธสปอนเซอร์ที่ชื่นชอบที่สุด</h3>
-        <div id="tableSponsor"></div>
-      </div>
-    </div>
-
-    <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-slate-800 text-white rounded-3xl p-8">
-            <h3 class="font-bold mb-4">บริษัทที่อยากให้มาปีหน้า (AB, AG)</h3>
-            <div id="listWanted" class="space-y-2 max-h-60 overflow-y-auto text-sm opacity-90 pr-2"></div>
-        </div>
-        <div class="bg-blue-50 border border-blue-100 rounded-3xl p-8">
-            <h3 class="font-bold text-blue-900 mb-4">ข้อเสนอแนะเพิ่มเติม (AC, AH)</h3>
-            <div id="listSuggest" class="space-y-2 max-h-60 overflow-y-auto text-sm pr-2"></div>
-        </div>
-    </div>
-  </div>
 
   <script>
-    Chart.register(ChartDataLabels);
-    // *** สำคัญ: เปลี่ยน URL นี้เป็น Web App URL ล่าสุดของคุณ ***
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbylyonLUKe_jJjbrtTASPg9Rphi7Ln9vRU2mO7Q6l-QcZ3p2htU_5NLUxIi2khhoa8s/exec?type=json';
-    
-    let ALL_DATA = [];
-    let charts = {};
-
-    window.onload = async () => {
-      try {
-        const response = await fetch(GAS_URL);
-        const data = await response.json();
-        if(data.error) throw new Error(data.error);
-        ALL_DATA = data;
-        updateDashboard();
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('app').classList.remove('opacity-0');
-      } catch (err) {
-        alert("🚨 เกิดข้อผิดพลาด: " + err.message + "\nกรุณาตรวจสอบว่าเลือก Permission เป็น 'Anyone' หรือยัง");
-      }
-    };
-
-    function updateDashboard() {
-      const selectedDate = document.getElementById('dateFilter').value;
-      const data = selectedDate === "ALL" ? ALL_DATA : ALL_DATA.filter(r => r[23].includes(selectedDate));
-      const n = data.length;
-
-      // 1. KPIs
-      document.getElementById('totalCount').innerText = n.toLocaleString();
-      document.getElementById('avgT').innerText = calcAvg(data, 19);
-      document.getElementById('avgP').innerText = calcAvg(data, 15);
-      
-      const nextCount = data.filter(r => r[20].includes("สนใจ")).length;
-      document.getElementById('pctU').innerText = ((nextCount/n)*100 || 0).toFixed(1);
-
-      // 2. Score Bars (Q, R, S)
-      const metrics = [
-        {idx: 16, label: 'นำเสนอหลักสูตร (Q)'},
-        {idx: 17, label: 'แนะนำบริษัท (R)'},
-        {idx: 18, label: 'กิจกรรมบนเวที (S)'}
-      ];
-      document.getElementById('scoreSections').innerHTML = metrics.map(m => {
-        const avg = calcAvg(data, m.idx);
-        const pct = (avg/5*100).toFixed(0);
-        return `<div>
-          <div class="flex justify-between mb-2 text-sm font-bold"><span class="text-slate-500">${m.label}</span><span class="text-blue-900">${avg}</span></div>
-          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-            <div class="bg-blue-900 h-full" style="width:${pct}%"></div>
-          </div>
-        </div>`;
-      }).join('');
-
-      // 3. Charts
-      renderBarChart('chartType', getCounts(data, 2), n);
-
-      // 4. Tables with ร้อยละ
-      renderTable('tableW', getCounts(data, 22, true), n, ['ช่องทาง', 'คน', 'ร้อยละ']);
-      renderTable('tableCompany', getCombinedCounts(data, [24, 25, 29, 30]), n, ['บริษัท', 'คนสนใจ', 'ร้อยละ'], 10);
-      renderTable('tableSponsor', getCombinedCounts(data, [26, 31]), n, ['บูธ', 'โหวต', 'ร้อยละ'], 5);
-
-      // 5. Lists
-      renderTextList('listWanted', data, [27, 32]);
-      renderTextList('listSuggest', data, [28, 33]);
-    }
-
-    // --- Helper Functions ---
-    function calcAvg(data, idx) {
-      const vals = data.map(r => parseFloat(r[idx])).filter(v => !isNaN(v));
-      return vals.length ? (vals.reduce((a,b)=>a+b, 0)/vals.length).toFixed(2) : "0.00";
-    }
-
-    function getCounts(data, idx, isMulti = false) {
-      let c = {};
-      data.forEach(r => {
-        let items = isMulti ? (r[idx]||"").split(/,\s*/) : [r[idx]];
-        items.forEach(it => { if(it && it.trim() !== "" && it !== "-") c[it.trim()] = (c[it.trim()]||0)+1; });
-      });
-      return Object.entries(c).sort((a,b) => b[1]-a[1]);
-    }
-
-    function getCombinedCounts(data, indices) {
-      let c = {};
-      data.forEach(r => indices.forEach(idx => {
-        let v = r[idx]?.trim();
-        if(v && v !== "" && v !== "-") c[v] = (c[v]||0)+1;
-      }));
-      return Object.entries(c).sort((a,b) => b[1]-a[1]);
-    }
-
-    function renderTable(id, counts, total, headers, limit = 99) {
-      document.getElementById(id).innerHTML = `
-        <table class="w-full text-sm">
-          <thead><tr class="text-slate-400 border-b"><th class="py-2 text-left">${headers[0]}</th><th class="text-right">${headers[1]}</th><th class="text-right">${headers[2]}</th></tr></thead>
-          <tbody>${counts.slice(0,limit).map(it => `
-            <tr class="border-b"><td class="py-2">${it[0]}</td><td class="text-right font-bold text-blue-900">${it[1]}</td><td class="text-right text-slate-400">${((it[1]/total)*100).toFixed(1)}%</td></tr>
-          `).join('')}</tbody>
-        </table>`;
-    }
-
-    function renderTextList(id, data, indices) {
-      let list = [];
-      data.forEach(r => indices.forEach(idx => { if(r[idx] && r[idx].length > 2) list.push(r[idx]); }));
-      document.getElementById(id).innerHTML = list.length ? list.map(t => `<div class="bg-white/10 p-2 rounded mb-1">▪️ ${t}</div>`).join('') : "ไม่มีข้อมูล";
-    }
-
-    function renderBarChart(id, counts, total) {
-      if(charts[id]) charts[id].destroy();
-      charts[id] = new Chart(document.getElementById(id), {
-        type: 'bar',
-        data: { labels: counts.map(c=>c[0]), datasets: [{ data: counts.map(c=>c[1]), backgroundColor: '#0F2C67' }] },
-        options: { 
-          maintainAspectRatio: false, indexAxis: 'y',
-          plugins: { 
-            legend: { display: false },
-            datalabels: { color: '#64748b', anchor: 'end', align: 'right', formatter: (v) => `${((v/total)*100).toFixed(1)}%` }
+    tailwind.config = {
+      theme: { 
+        extend: { 
+          fontFamily: { sans: ['"Noto Sans Thai"', 'sans-serif'] },
+          colors: { 
+            cra: { primary: '#0F2C67', light: '#2C4E9C', secondary: '#E65100', orange: '#FF8F00', yellow: '#FFCA28', bg: '#F1F5F9' }
           },
-          scales: { x: { display: false }, y: { grid: { display: false } } }
+          boxShadow: { soft: '0 4px 20px -2px rgba(0, 0, 0, 0.05)', glow: '0 0 15px rgba(15, 44, 103, 0.15)' }
         }
-      });
+      }
     }
   </script>
+
+  <style>
+    body { background-color: #F8FAFC; color: #334155; }
+    * { font-family: 'Noto Sans Thai', sans-serif !important; }
+    
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+
+    .nav-btn { transition: all 0.2s ease; border: 1px solid transparent; }
+    .nav-btn.active { background: linear-gradient(135deg, #0F2C67 0%, #1e40af 100%); color: white; box-shadow: 0 4px 6px -1px rgba(15, 44, 103, 0.3); transform: translateY(-1px); }
+    .nav-btn:not(.active):hover { background-color: #F1F5F9; color: #0F2C67; }
+
+    .card { background: white; border-radius: 1.25rem; border: 1px solid #F1F5F9; box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .user-pill { display: flex; align-items: center; justify-content: space-between; background-color: #fff; border: 1px solid #E2E8F0; border-radius: 1rem; padding: 10px 12px 10px 16px; margin-bottom: 10px; transition: all 0.2s ease; cursor: pointer; position: relative; overflow: hidden; }
+    .user-pill:hover { border-color: #0F2C67; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+    .user-pill:hover::before { opacity: 1; }
+    
+    .badge-pct { background-color: #F1F5F9; color: #64748B; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; min-width: 70px; text-align: center; }
+
+    /* Tables */
+    .clean-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .clean-table th { background-color: #F8FAFC; color: #64748B; font-weight: 600; font-size: 0.8rem; padding: 12px; border-bottom: 1px solid #E2E8F0; text-align: left; }
+    .clean-table td { padding: 10px 12px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; color: #334155; font-size: 0.9rem; }
+    .clean-table tr { pointer-events: none; }
+
+    @media (max-width: 640px) {
+        .clean-table th:first-child, .clean-table td:first-child { display: none !important; }
+        .clean-table td { padding: 8px 4px !important; font-size: 0.75rem !important; }
+        .badge-pct { min-width: 50px !important; padding: 2px 4px !important; font-size: 10px !important; }
+        .clean-table th:nth-child(3), .clean-table td:nth-child(3) { width: 50px !important; text-align: right; }
+        .clean-table th:nth-child(4), .clean-table td:nth-child(4) { width: 60px !important; text-align: right; }
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeUp 0.5s ease forwards; }
+  </style>
+</head>
+<body class="bg-slate-50 antialiased selection:bg-blue-100 selection:text-blue-900">
+
+  <div id="loading" class="fixed inset-0 bg-white/90 backdrop-blur-sm z-[60] flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="relative">
+      <div class="w-16 h-16 border-4 border-slate-100 border-t-cra-primary rounded-full animate-spin"></div>
+      <div class="absolute inset-0 flex items-center justify-center"><span class="text-cra-primary font-bold text-xs">CRA</span></div>
+    </div>
+    <p class="text-slate-400 font-medium text-sm mt-4 animate-pulse">กำลังประมวลผลข้อมูล...</p>
+  </div>
+  
+  <div id="mainApp" class="container mx-auto px-4 py-8 max-w-[1400px] opacity-0 transition-opacity duration-700">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 no-print">
+      <div class="flex items-center gap-4">
+        <a href="<?= getScriptUrl() ?>?p=home" class="shrink-0 hover:opacity-80 transition"><img src="https://s.imgz.io/2026/02/18/LOGO-Jobfaird64557ecd1525940.png" class="h-24 object-contain"></a>
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-slate-800">นิทรรศการแนะแนวอาชีพและการศึกษาต่อ</h2>
+          <div class="flex items-center gap-2 text-slate-500 text-sm font-medium mt-1">
+             <a href="<?= getScriptUrl() ?>?p=home" class="flex items-center hover:text-cra-primary transition font-bold"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> กลับหน้าหลัก</a>
+             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            Dashboard สรุปผลการประเมินความพึงพอใจ
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm flex gap-2 overflow-x-auto">
+        <button onclick="setFilter('All')" id="btnAll" class="nav-btn active px-4 py-2 rounded-lg font-bold min-w-[80px]">ทั้งหมด</button>
+        <button onclick="setFilter('12')" id="btn12" class="nav-btn px-4 py-2 rounded-lg font-bold text-slate-500 min-w-[80px]">12 ก.พ.</button>
+        <button onclick="setFilter('13')" id="btn13" class="nav-btn px-4 py-2 rounded-lg font-bold text-slate-500 min-w-[80px]">13 ก.พ.</button>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-6 mb-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card p-8 lg:col-span-2 relative overflow-hidden bg-white border-l-[6px] border-l-green-500 shadow-sm">
+          <div class="absolute right-[-20px] top-[-20px] bg-green-50 w-40 h-40 rounded-full opacity-50"></div>
+          <div class="relative z-10 flex flex-col md:flex-row justify-between gap-8">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-4 text-green-700">
+                <div class="bg-green-100 p-2 rounded-lg"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div>
+                <h3 class="text-lg font-bold">ผู้ร่วมงานจริง (แบบรายคน)</h3>
+              </div>
+              <div class="flex items-baseline gap-3">
+                <span class="text-7xl font-black text-slate-800 tracking-tighter">818</span>
+                <span class="text-2xl font-bold text-slate-400">คน</span>
+              </div>
+              <div class="mt-4 flex items-center gap-4">
+                 <div class="text-sm font-medium text-slate-500">จากยอดลงทะเบียน 920 คน</div>
+                 <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black shadow-sm">มาจริงร้อยละ 88.91</div>
+              </div>
+            </div>
+            <div class="flex-1 flex flex-col justify-center gap-3">
+               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-all">
+                  <div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-blue-500 uppercase">กลุ่มลงทะเบียนล่วงหน้า (ที่มาจริง)</span></div>
+                  <div class="text-2xl font-black text-blue-700">350 <span class="text-sm font-normal text-slate-400">คน</span></div>
+                  <p class="text-[10px] text-slate-400">จากยอดลงทะเบียน 452 คน</p>
+               </div>
+               <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:shadow-md transition-all">
+                  <div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-orange-500 uppercase">กลุ่ม Walk-in</span></div>
+                  <div class="text-2xl font-black text-orange-700">468 <span class="text-sm font-normal text-slate-400">คน</span></div>
+                  <p class="text-[10px] text-slate-400">ลงทะเบียนหน้างาน</p>
+               </div>
+            </div>
+          </div>
+        </div>
+        <div class="card p-8 flex flex-col justify-between bg-gradient-to-br from-indigo-900 to-blue-800 text-white shadow-glow">
+           <div>
+              <p class="text-indigo-200 text-sm font-bold mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> ยอดเช็คอินร่วมงานรวม</p>
+              <h2 class="text-6xl font-black tracking-tighter" id="totalCheckin">905</h2>
+              <p class="text-indigo-300 text-xs mt-1 font-medium">จำนวนครั้งที่มีการเข้างาน (Transaction)</p>
+           </div>
+           <div class="mt-8 grid grid-cols-2 gap-3">
+              <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20"><p class="text-[10px] font-bold text-indigo-200">12 ก.พ.</p><p class="text-xl font-black">524 <span class="text-xs font-normal opacity-70">คน</span></p></div>
+              <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20"><p class="text-[10px] font-bold text-indigo-200">13 ก.พ.</p><p class="text-xl font-black">381 <span class="text-xs font-normal opacity-70">คน</span></p></div>
+           </div>
+        </div>
+      </div>
+
+<div onclick="openStuModal()" class="card p-8 relative overflow-hidden bg-white border-l-[6px] border-l-yellow-400 shadow-sm cursor-pointer hover:shadow-lg transition-all group">
+         
+         <div class="absolute top-4 right-4 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-yellow-50 p-1.5 rounded-full">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+         </div>
+
+         <div class="absolute right-0 top-0 bg-yellow-50 w-64 h-64 rounded-bl-full opacity-40 -z-0"></div>
+         
+         <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div class="flex items-center gap-6">
+                 <div class="bg-yellow-100 p-4 rounded-2xl text-yellow-700 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                 </div>
+                 <div>
+                     <h3 class="text-lg font-bold text-slate-800 group-hover:text-cra-primary transition-colors">นักศึกษา CRA ที่ได้รับชั่วโมงกิจกรรม</h3>
+                     <div class="flex items-baseline gap-3 mt-1">
+                         <span class="text-6xl font-black text-slate-800 tracking-tighter">362</span>
+                         <span class="text-xl font-bold text-slate-400">คน</span>
+                         <span id="craAttendeePctBadge" class="ml-4 bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full border border-yellow-200">
+                           ...
+                         </span>
+                     </div>
+                     <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
+                       <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                       ยอดรวมจริงตามรายชื่อที่ได้รับชั่วโมงกิจกรรม <span class="text-red-500 font-bold">(บางส่วนไม่ได้ทำแบบประเมิน)</span>
+                     </p>
+                 </div>
+             </div>
+
+             <div class="w-full md:w-auto bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center md:text-right group-hover:bg-yellow-50/50 group-hover:border-yellow-200 transition-all">
+                 <p class="text-xs text-slate-500 font-bold uppercase mb-1 tracking-wider">สัดส่วนการตอบแบบสอบถาม</p>
+                 <div class="text-3xl font-black text-indigo-600" id="craRespRate">กำลังคำนวณ...</div>
+             </div>
+         </div>
+      </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="card p-8 relative overflow-hidden group">
+        <div class="absolute right-[-20px] top-[-20px] bg-blue-50 w-32 h-32 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="relative z-10 flex justify-between items-end">
+          <div><p class="text-slate-500 text-sm font-semibold mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-cra-primary"></span> ผู้เข้าร่วมที่ตอบแบบสอบถามทั้งหมด</p><h2 class="text-6xl font-bold text-slate-800 tracking-tighter" id="kpiTotal">0</h2></div>
+          <div class="text-right">
+            <div class="text-cra-primary bg-blue-50 px-3 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span></span> Real-time</div>
+            <div class="text-slate-400 text-sm mt-1">คน</div>
+          </div>
+        </div>
+      </div>
+      <div class="card p-8 relative overflow-hidden group">
+        <div class="absolute right-[-20px] top-[-20px] bg-orange-50 w-32 h-32 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="relative z-10 flex justify-between items-end">
+          <div><p class="text-slate-500 text-sm font-semibold mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-cra-secondary"></span> ความพึงพอใจเฉลี่ย</p><h2 class="text-6xl font-bold text-cra-secondary tracking-tighter" id="kpiSatScore">0.00</h2></div>
+          <div class="text-right">
+            <div class="flex justify-end mb-2"><span id="dateBadgeSatKPI" class="text-[10px] bg-white/80 text-orange-600 px-2 py-0.5 rounded-md font-bold shadow-sm">All</span></div>
+            <div class="flex gap-1 justify-end text-yellow-400 mb-1"><svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+            <div class="text-slate-400 text-sm">คะแนนเต็ม 5.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="card p-6 lg:col-span-2 flex flex-col">
+        <div class="flex justify-between items-start mb-8">
+          <h3 class="text-lg font-bold text-slate-800 flex items-center gap-3">
+            <div class="bg-yellow-100 p-2 rounded-lg text-yellow-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            ผลการประเมินรายด้าน
+          </h3>
+          <span id="dateBadgeSatDetail" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span>
+        </div>
+        <div id="satisfactionGrid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8"></div>
+      </div>
+
+      <div class="card p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-slate-800 flex items-center gap-2"><div class="bg-blue-50 p-1.5 rounded text-cra-primary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>สัดส่วนเพศ</h3><span id="dateBadgeSex" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span></div>
+        <div class="flex flex-col items-center justify-center h-full gap-4">
+          <div class="relative w-[110px] h-[110px] shrink-0"><canvas id="chartGender"></canvas><div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"><span class="text-[8px] text-slate-400 font-bold uppercase">ทั้งหมด</span><span class="text-sm font-bold text-slate-700" id="totalGender">0</span></div></div>
+          <div id="legendGender" class="w-full space-y-1"></div>
+        </div>
+      </div>
+
+      <div class="card p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-slate-800 flex items-center gap-2"><div class="bg-blue-50 p-1.5 rounded text-cra-primary"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>แนวโน้มปีหน้า</h3><span id="dateBadgeNextTrend" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span></div>
+        <div class="flex flex-col items-center justify-center h-full gap-4">
+          <div class="relative w-[110px] h-[110px] shrink-0"><canvas id="chartNext"></canvas><div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"><span class="text-[8px] text-slate-400 font-bold uppercase">ทั้งหมด</span><span class="text-sm font-bold text-slate-700" id="totalNextVal">0</span></div></div>
+          <div id="legendNext" class="w-full space-y-1"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="card p-6 h-[550px] flex flex-col">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+          <h3 class="font-bold text-slate-800 flex items-center">
+            <div class="bg-blue-50 p-2 rounded-lg text-cra-primary mr-3"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div>
+            ประเภทผู้เข้าร่วม
+          </h3>
+          <span id="dateBadgeUserType" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span>
+        </div>
+        <div id="userTypePillContainer" class="flex-1 overflow-y-auto custom-scroll pr-1"></div>
+      </div>
+
+      <div class="card p-6 h-[550px] flex flex-col">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+          <h3 class="font-bold text-slate-800 flex items-center">
+            <div class="bg-indigo-50 p-2 rounded-lg text-indigo-600 mr-3"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div>
+            ช่องทางการรับรู้
+          </h3>
+          <span id="dateBadgeAware" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scroll pr-2">
+          <table class="clean-table">
+            <thead><tr><th class="w-[60px] text-center text-[10px] text-slate-400 font-normal">อันดับ</th><th class="text-left text-[10px] text-slate-400 font-normal">ช่องทาง</th><th class="w-[90px] text-right text-[10px] text-slate-400 font-normal">จำนวน</th><th class="w-[70px] text-right text-[10px] text-slate-400 font-normal">ร้อยละ</th></tr></thead>
+            <tbody id="tableAwareness"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="card p-6 h-[600px] flex flex-col">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex items-start gap-3">
+            <div class="bg-blue-50 p-2 rounded-lg text-cra-primary"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+            <div>
+              <h3 class="font-bold text-lg text-slate-800">สถานประกอบการยอดนิยม</h3>
+              <p class="text-xs text-slate-400 font-normal mt-1">ข้อมูลรวมจากลำดับที่ 1 และ 2</p>
+            </div>
+          </div>
+          <span id="dateBadgeComp" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scroll pr-2">
+          <table class="clean-table"><thead><tr><th class="w-[60px] text-center text-[10px] text-slate-400 font-normal">อันดับ</th><th class="text-left text-[10px] text-slate-400 font-normal">ชื่อสถานประกอบการ</th><th class="w-[90px] text-right text-[10px] text-slate-400 font-normal">จำนวน</th><th class="w-[70px] text-right text-[10px] text-slate-400 font-normal">ร้อยละ</th></tr></thead><tbody id="tableCompany"></tbody></table>
+        </div>
+      </div>
+
+      <div class="card p-6 h-[600px] flex flex-col">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex items-center gap-3">
+            <div class="bg-orange-50 p-2 rounded-lg text-orange-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></div>
+            <h3 class="font-bold text-lg text-slate-800">บูธ Sponsor ที่ชื่นชอบ</h3>
+          </div>
+          <span id="dateBadgeBooth" class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-bold border border-slate-200">All</span>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scroll pr-2">
+          <table class="clean-table"><thead><tr><th class="w-[60px] text-center text-[10px] text-slate-400 font-normal">อันดับ</th><th class="text-left text-[10px] text-slate-400 font-normal">ชื่อบูธ</th><th class="w-[90px] text-right text-[10px] text-slate-400 font-normal">โหวต</th><th class="w-[70px] text-right text-[10px] text-slate-400 font-normal">ร้อยละ</th></tr></thead><tbody id="tableBooth"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-8 mb-12">
+      
+      <div class="card p-0 h-[600px] flex flex-col overflow-hidden border border-slate-200 shadow-sm">
+        <div class="p-6 border-b border-slate-100 bg-gradient-to-r from-blue-50/80 to-white flex justify-between items-center">
+          <h3 class="font-bold text-lg text-cra-primary flex items-center gap-2">
+            <div class="bg-blue-100 p-1.5 rounded-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            </div>
+            อยากให้หน่วยงานใดมาปีหน้า?
+          </h3>
+          <div class="flex items-center gap-2">
+            <span id="dateBadgeNextReq" class="text-xs bg-white text-cra-primary border border-blue-100 px-3 py-1 rounded-full font-bold shadow-sm">All</span>
+            <span class="text-xs bg-cra-primary text-white px-3 py-1 rounded-full font-bold shadow-sm" id="countNextReq">0</span>
+          </div>
+        </div>
+        <div id="nextReqBox" class="flex-1 overflow-y-auto custom-scroll p-6 bg-slate-50/30"></div>
+      </div>
+
+      <div class="card p-0 h-[600px] flex flex-col overflow-hidden border border-slate-200 shadow-sm">
+        <div class="p-6 border-b border-slate-100 bg-gradient-to-r from-orange-50/80 to-white flex justify-between items-center">
+          <h3 class="font-bold text-lg text-cra-secondary flex items-center gap-2">
+            <div class="bg-orange-100 p-1.5 rounded-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+            </div>
+            ข้อเสนอแนะเพิ่มเติม
+          </h3>
+          <div class="flex items-center gap-2">
+            <span id="dateBadgeSugg" class="text-xs bg-white text-cra-secondary border border-orange-100 px-3 py-1 rounded-full font-bold shadow-sm">All</span>
+            <span class="text-xs bg-cra-secondary text-white px-3 py-1 rounded-full font-bold shadow-sm" id="countSugg">0</span>
+          </div>
+        </div>
+        <div id="suggestionBox" class="flex-1 overflow-y-auto custom-scroll p-6 bg-slate-50/30"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="typeModal" class="fixed inset-0 z-[100] hidden transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <div class="bg-blue-50 p-3 rounded-xl text-cra-primary"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div>
+            <div><h3 class="text-xl font-bold text-slate-800" id="modalTitle">รายละเอียด</h3><p class="text-sm text-slate-500 font-medium" id="modalSubtitle">0 คน</p></div>
+          </div>
+          <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="p-8 overflow-y-auto custom-scroll bg-white flex-1" id="modalContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="subSelectModal" class="fixed inset-0 z-[110] hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeSubModal()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div id="subSelectContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center"></div>
+    </div>
+  </div>
+
+   <div id="stuModal" class="fixed inset-0 z-[150] hidden transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeStuModal()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-fade-up">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-yellow-50">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-2 rounded-full shadow-sm text-yellow-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800" id="stuModalTitle">รายชื่อนักศึกษา</h3>
+                        <p class="text-xs text-slate-500" id="stuModalSubtitle">จำแนกตามหลักสูตร</p>
+                    </div>
+                </div>
+                <button onclick="closeStuModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="stuModalContent" class="p-6 overflow-y-auto custom-scroll flex-1 bg-slate-50/50">
+                </div>
+        </div>
+    </div>
+</div>
+<script>
+    let RAW_DATA = [];
+    let STU_DATA = [];
+    let FILTER_DATE = 'All';
+    let g_gradData = [];
+    let g_currentGradDegree = '';
+    let charts = {}; // เพิ่มตัวแปรเก็บ chart เพื่อป้องกัน Error เวลาทำลาย chart เก่า
+    
+    const IDX = {
+      Timestamp: 0, Sex: 1, Type: 2, IsStudentCRA: 3, Degree: 4, Institute: 5, Position: 6,
+      StudentID: 7, YearCRA: 8, CourseCRA: 9,
+      InstituteGen: 10, MajorGen: 11, YearGen: 12,
+      Affiliation: 13,
+      Sat_Time: 14, Sat_Place: 15, Sat_Curr: 16, Sat_Job: 17, Sat_Stage: 18, Sat_Overall: 19,
+      NextJoin: 20, Source: 22, Date: 23,
+      D12_Comp1: 24, D12_Comp2: 25, D12_Spon: 26, D12_NextReq: 27, D12_Sugg: 28,
+      D13_Comp1: 29, D13_Comp2: 30, D13_Spon: 31, D13_NextReq: 32, D13_Sugg: 33
+    };
+    
+    const STU_IDX = { Name: 0, ID: 1, Course: 2, Year: 3 };
+
+    let g_craData = []; let g_currentCourse = ''; let g_currentYear = '';
+    let g_genData = []; let g_currentGenInst = ''; let g_currentGenMajor = '';
+  
+const API_URL =https://script.google.com/macros/s/AKfycbylyonLUKe_jJjbrtTASPg9Rphi7Ln9vRU2mO7Q6l-QcZ3p2htU_5NLUxIi2khhoa8s/exec
+    window.onload = async () => {
+      fetch(`${API_URL}?action=datajob`)
+    .then(res => res.json())
+    .then(data => {
+      RAW_DATA = data;
+      initDashboard();
+    });
+
+  // เปลี่ยนวิธีดึงข้อมูลนักศึกษา
+  fetch(`${API_URL}?action=datastu`)
+    .then(res => res.json())
+    .then(data => {
+      STU_DATA = data;
+      console.log("Student Data Loaded:", STU_DATA.length);
+    });
+};
+
+    function initDashboard() {
+      document.getElementById('loading').classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => document.getElementById('loading').classList.add('hidden'), 500);
+      document.getElementById('mainApp').classList.remove('opacity-0');
+      renderDashboard();
+    }
+
+    function setFilter(val) {
+      FILTER_DATE = val;
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn' + val).classList.add('active');
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      let displayData = RAW_DATA.filter(r => (FILTER_DATE === 'All') || (r[IDX.Date] && r[IDX.Date].includes(FILTER_DATE)));
+      const total = displayData.length;
+
+      animateValue("kpiTotal", parseInt(document.getElementById('kpiTotal').innerText.replace(/,/g, '') || 0), total, 500);
+
+      // คำนวณ KPI คะแนนความพึงพอใจ
+      let sumSat = 0, cntSat = 0;
+      displayData.forEach(r => {
+        let v = parseFloat(r[IDX.Sat_Overall]);
+        if (!isNaN(v)) { sumSat += v; cntSat++; }
+      });
+
+      let avgVal = cntSat ? (sumSat / cntSat) : 0;
+      const kpiSatEl = document.getElementById('kpiSatScore');
+      if (kpiSatEl) {
+        kpiSatEl.classList.remove('tracking-tighter');
+        kpiSatEl.classList.add('flex', 'items-baseline', 'gap-3');
+        kpiSatEl.innerHTML = `
+          <span class="tracking-tighter">${avgVal.toFixed(2)}</span> 
+          <span class="text-xl text-slate-400 font-bold tracking-normal whitespace-nowrap">(ร้อยละ ${(avgVal/5*100).toFixed(2)})</span>`;
+      }
+
+      // อัปเดต Badges วันที่
+      const dateTxt = FILTER_DATE === 'All' ? 'รวมทั้ง 2 วัน' : `วันที่ ${FILTER_DATE} ก.พ.`;
+      ['dateBadgeComp', 'dateBadgeBooth', 'dateBadgeSex', 'dateBadgeUserType', 'dateBadgeSource', 'dateBadgeSatKPI', 'dateBadgeSatDetail', 'dateBadgeNextTrend', 'dateBadgeNextReq', 'dateBadgeSugg', 'dateBadgeAware'].forEach(id => {
+        if (document.getElementById(id)) document.getElementById(id).innerText = dateTxt;
+      });
+
+      // เรนเดอร์กราฟและตาราง
+      renderCleanDoughnut('chartGender', 'legendGender', getCounts(displayData, IDX.Sex), 'totalGender');
+      renderCleanDoughnut('chartNext', 'legendNext', getCounts(displayData, IDX.NextJoin), 'totalNextVal');
+      renderUserTypePills('userTypePillContainer', getCounts(displayData, IDX.Type), total);
+      renderTopList('tableAwareness', getCounts(displayData, IDX.Source, true), total);
+
+      // ประมวลผลข้อมูลบริษัทและบูธ
+      let companies = [], booths = [];
+      const clean = (t) => { if (!t) return null; let s = t.toString().trim(); if (s.length < 2 || ['-', '_', '.', 'ไม่มี', 'ไม่ระบุ'].includes(s)) return null; return s; }
+
+      displayData.forEach(r => {
+        const d = r[IDX.Date] ? r[IDX.Date].match(/\d+/)[0] : '??';
+        if (FILTER_DATE !== 'All' && FILTER_DATE !== d) return;
+        if (d === '12') {
+          if (clean(r[IDX.D12_Comp1])) companies.push(clean(r[IDX.D12_Comp1]));
+          if (clean(r[IDX.D12_Comp2])) companies.push(clean(r[IDX.D12_Comp2]));
+          if (clean(r[IDX.D12_Spon])) booths.push(clean(r[IDX.D12_Spon]));
+        }
+        if (d === '13') {
+          if (clean(r[IDX.D13_Comp1])) companies.push(clean(r[IDX.D13_Comp1]));
+          if (clean(r[IDX.D13_Comp2])) companies.push(clean(r[IDX.D13_Comp2]));
+          if (clean(r[IDX.D13_Spon])) booths.push(clean(r[IDX.D13_Spon]));
+        }
+      });
+
+      renderTopList('tableCompany', countFreq(companies), total);
+      renderTopList('tableBooth', countFreq(booths), total);
+
+      // ✅ [FIXED] เรียกฟังก์ชันแบ่งคอลัมน์ (ซ่อมจุดที่ทำให้เครื่องค้าง)
+      renderSplitCard(displayData, IDX.D12_NextReq, IDX.D13_NextReq, 'nextReqBox', 'countNextReq', 'dateBadgeNextReq', 'blue');
+      renderSplitCard(displayData, IDX.D12_Sugg, IDX.D13_Sugg, 'suggestionBox', 'countSugg', 'dateBadgeSugg', 'orange');
+
+      // เรนเดอร์ความพึงพอใจรายด้าน
+      const satMetrics = [
+        { idx: IDX.Sat_Time, label: 'ความเหมาะสมของช่วงเวลา' },
+        { idx: IDX.Sat_Place, label: 'ความเหมาะสมของสถานที่' },
+        { idx: IDX.Sat_Curr, label: 'ช่วงกิจกรรมนำเสนอหลักสูตรและผลงานนักศึกษา' },
+        { idx: IDX.Sat_Job, label: 'ช่วงกิจกรรมนำเสนอแนะนำสถานประกอบการ' },
+        { idx: IDX.Sat_Stage, label: 'ภาพรวมกิจกรรมบนเวที' },
+      ];
+
+      const satGrid = document.getElementById('satisfactionGrid');
+      if (satGrid) {
+        satGrid.innerHTML = satMetrics.map(m => {
+          let s = 0, c = 0;
+          displayData.forEach(r => { let v = parseFloat(r[m.idx]); if (!isNaN(v)) { s += v; c++; } });
+          let avgNum = c ? (s / c) : 0;
+          return `
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-end">
+                <span class="font-bold text-slate-700 text-sm w-2/3 leading-snug">${m.label}</span>
+                <div class="text-right flex flex-col items-end">
+                  <div class="flex items-baseline gap-1"><span class="text-2xl font-black text-slate-800 tracking-tight leading-none">${avgNum.toFixed(2)}</span><span class="text-xs text-slate-400 font-medium">/ 5</span></div>
+                  <span class="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded mt-0.5">ร้อยละ ${(avgNum/5*100).toFixed(2)}</span>
+                </div>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-cra-primary h-full transition-all duration-1000 ease-out" style="width:${(avgNum/5*100)}%"></div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // ส่วนคำนวณสัดส่วนนักศึกษา
+      const STATS = { cra_hours: 362, unique: 818 };
+      let craVsTotalPct = ((STATS.cra_hours / STATS.unique) * 100).toFixed(2);
+      if(document.getElementById('craAttendeePctBadge')) document.getElementById('craAttendeePctBadge').innerText = `ร้อยละ ${craVsTotalPct} ของผู้เข้าร่วมจริง`;
+
+      let craRespondents = RAW_DATA.filter(r => r[IDX.Type] && r[IDX.Type].includes('นักศึกษา') && r[IDX.IsStudentCRA] && r[IDX.IsStudentCRA].trim() === 'ใช่').length;
+      let craRespPct = ((craRespondents / STATS.cra_hours) * 100).toFixed(2);
+      if (document.getElementById('craRespRate')) document.getElementById('craRespRate').innerHTML = `${craRespondents} คน <span class="text-lg text-indigo-400 font-bold ml-1">(ร้อยละ ${craRespPct})</span>`;
+    }
+
+    // ✅ [NEW] ฟังก์ชันแบ่งคอลัมน์ซ้ายขวา (เพิ่มกลับมาให้)
+    const renderSplitCard = (data, idx12, idx13, containerId, countId, dateBadgeId, theme) => {
+        let map12 = new Map(), map13 = new Map(), totalCount = 0;
+        data.forEach(r => {
+            const cleanT = (t) => { if(!t) return null; let s = t.trim(); return (s.length > 1 && s !== '-' && s !== '.') ? s : null; };
+            let t12 = cleanT(r[idx12]); if (t12 && (FILTER_DATE === 'All' || FILTER_DATE === '12')) { map12.set(t12, (map12.get(t12) || 0) + 1); totalCount++; }
+            let t13 = cleanT(r[idx13]); if (t13 && (FILTER_DATE === 'All' || FILTER_DATE === '13')) { map13.set(t13, (map13.get(t13) || 0) + 1); totalCount++; }
+        });
+        if(document.getElementById(countId)) document.getElementById(countId).innerText = `${totalCount} ข้อความ`;
+        const createBubble = (txt, count) => {
+            let bg = theme === 'blue' ? 'bg-blue-600' : 'bg-orange-500';
+            return `<div class="bg-white border border-slate-100 p-3 rounded-xl shadow-sm flex justify-between items-start gap-3 mb-3 animate-fade-up"><p class="text-sm text-slate-700 font-medium flex-1">"${txt}"</p>${count > 1 ? `<div class="${bg} text-white text-[10px] font-bold px-2 py-1 rounded-lg">x${count}</div>` : ''}</div>`;
+        };
+        const box = document.getElementById(containerId);
+        const getSorted = (m) => Array.from(m.entries()).map(([t, c]) => ({ t, c })).sort((a, b) => b.c - a.c);
+        const list12 = getSorted(map12), list13 = getSorted(map13);
+
+        if (totalCount === 0) { box.innerHTML = `<div class="h-full flex items-center justify-center text-slate-300">ไม่มีข้อมูล</div>`; } 
+        else if (FILTER_DATE === 'All') {
+            box.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-full divide-x divide-slate-100">
+                <div class="flex flex-col h-full pr-4"><div class="flex items-center gap-2 mb-4 pb-2 border-b sticky top-0 bg-slate-50/50 backdrop-blur-sm z-10"><span class="w-2 h-2 rounded-full ${theme==='blue'?'bg-blue-500':'bg-orange-400'}"></span><h4 class="font-bold text-slate-700 text-xs">12 ก.พ. (${list12.length})</h4></div><div class="flex-1">${list12.map(i => createBubble(i.t, i.c)).join('')}</div></div>
+                <div class="flex flex-col h-full pl-4"><div class="flex items-center gap-2 mb-4 pb-2 border-b sticky top-0 bg-slate-50/50 backdrop-blur-sm z-10"><span class="w-2 h-2 rounded-full ${theme==='blue'?'bg-indigo-500':'bg-orange-600'}"></span><h4 class="font-bold text-slate-700 text-xs">13 ก.พ. (${list13.length})</h4></div><div class="flex-1">${list13.map(i => createBubble(i.t, i.c)).join('')}</div></div>
+            </div>`;
+        } else {
+            const activeList = FILTER_DATE === '12' ? list12 : list13;
+            box.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4 content-start">${activeList.map(i => createBubble(i.t, i.c)).join('')}</div>`;
+        }
+    };
+
+    // ✅ [NEW] ฟังก์ชันดูรายชื่อนักศึกษา (ซ่อมจุดที่ทำให้ข้อมูลไม่ขึ้น)
+    function openStuModal() {
+        if(!STU_DATA.length) { alert('กำลังโหลดข้อมูลรายชื่อนักศึกษา...'); return; }
+        document.getElementById('stuModal').classList.remove('hidden');
+        renderStuStep1_Course();
+    }
+    function closeStuModal() { document.getElementById('stuModal').classList.add('hidden'); }
+    function getStuCounts(data, idx) {
+        let counts = {};
+        data.forEach(r => { let key = r[idx]; if(key) counts[key] = (counts[key] || 0) + 1; });
+        return Object.entries(counts).sort((a,b) => b[1] - a[1]);
+    }
+    function renderStuStep1_Course() {
+        const counts = getStuCounts(STU_DATA, STU_IDX.Course);
+        document.getElementById('stuModalTitle').innerText = "เลือกหลักสูตร";
+        document.getElementById('stuModalSubtitle').innerText = "ข้อมูลนักศึกษา CRA";
+        document.getElementById('stuModalContent').innerHTML = `<div class="grid gap-3 animate-fade-up">${counts.map(c => `
+            <div onclick="renderStuStep2_Year('${c[0]}')" class="bg-white p-4 rounded-xl border border-slate-200 hover:border-yellow-400 cursor-pointer flex justify-between shadow-sm"><span class="font-bold text-slate-700">${c[0]}</span><span class="text-xs font-bold bg-slate-100 px-2 py-1 rounded">${c[1]} คน</span></div>`).join('')}</div>`;
+    }
+    function renderStuStep2_Year(course) {
+        const filtered = STU_DATA.filter(r => r[STU_IDX.Course] === course);
+        const counts = getStuCounts(filtered, STU_IDX.Year);
+        document.getElementById('stuModalTitle').innerText = course;
+        document.getElementById('stuModalContent').innerHTML = `<div class="animate-fade-up"><button onclick="renderStuStep1_Course()" class="mb-4 text-xs font-bold text-slate-400 hover:text-cra-primary">← ย้อนกลับ</button><div class="grid gap-3">${counts.map(c => `
+            <div onclick="renderStuStep3_IDList('${course}', '${c[0]}')" class="bg-white p-4 rounded-xl border border-slate-200 hover:border-cra-primary cursor-pointer flex justify-between shadow-sm"><span class="font-bold text-slate-700">ชั้นปีที่ ${c[0]}</span><span class="text-xs font-bold bg-cra-primary text-white px-3 py-1 rounded-full">${c[1]} คน</span></div>`).join('')}</div></div>`;
+    }
+    function renderStuStep3_IDList(course, year) {
+        const list = STU_DATA.filter(r => r[STU_IDX.Course] === course && String(r[STU_IDX.Year]) === String(year));
+        document.getElementById('stuModalTitle').innerText = `${course} (ปี ${year})`;
+        document.getElementById('stuModalContent').innerHTML = `<div class="animate-fade-up"><button onclick="renderStuStep2_Year('${course}')" class="mb-4 text-xs font-bold text-slate-400 hover:text-cra-primary">← ย้อนกลับ</button><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${list.map(r => `
+            <div onclick="renderStuStep4_ShowName('${r[STU_IDX.ID]}', '${r[STU_IDX.Name]}', '${course}', '${year}')" class="bg-white border border-slate-200 text-center py-3 rounded-lg font-mono font-bold hover:bg-cra-primary hover:text-white cursor-pointer shadow-sm transition-all">${r[STU_IDX.ID]}</div>`).join('')}</div></div>`;
+    }
+    function renderStuStep4_ShowName(id, name, course, year) {
+        document.getElementById('stuModalContent').innerHTML = `<div class="animate-fade-up flex flex-col items-center py-10 text-center"><div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div><h2 class="text-xl font-bold text-slate-800 mb-1">${name}</h2><p class="text-slate-500 font-mono mb-8">รหัส: ${id}</p><button onclick="renderStuStep3_IDList('${course}', '${year}')" class="bg-cra-primary text-white px-6 py-2 rounded-full font-bold">ตกลง / กลับ</button></div>`;
+    }
+
+    // Helper Functions
+    function handleUserTypeClick(t) { 
+        const m = document.getElementById('subSelectModal'), c = document.getElementById('subSelectContent');
+        if (t.includes("นักศึกษาระดับปริญญาตรี")) {
+            c.innerHTML = `<div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-cra-primary mb-4"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><h3 class="text-xl font-bold text-slate-800 mb-2">เลือกกลุ่มนักศึกษา</h3><div class="flex flex-col gap-3 mt-6"><button onclick="selectSubType('student_cra', '${t}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-cra-primary transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-cra-primary">นศ. ราชวิทยาลัยจุฬาภรณ์</div></div><svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button><button onclick="selectSubType('student_general', '${t}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-cra-secondary transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-cra-secondary">นศ. ทั่วไป (สถาบันอื่น)</div></div><svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button></div><button onclick="closeSubModal()" class="mt-8 text-sm text-slate-400 underline">ยกเลิก</button>`;
+            m.classList.remove('hidden');
+        } else openDetailModal(t);
+    }
+    function closeSubModal() { document.getElementById('subSelectModal').classList.add('hidden'); }
+    function selectSubType(s, t) { closeSubModal(); openDetailModal(t, s); }
+    function closeModal() { document.getElementById('typeModal').classList.add('hidden'); }
+    function getCounts(d, i, m = false) { let c = {}; d.forEach(r => { let v = r[i]; if (!v) return; let its = m ? v.split(',').map(s => s.trim()) : [v.trim()]; its.forEach(x => { if (x) c[x] = (c[x] || 0) + 1; }); }); return Object.entries(c).sort((a, b) => b[1] - a[1]); }
+    function countFreq(a) { let c = {}; a.forEach(x => c[x] = (c[x] || 0) + 1); return Object.entries(c).sort((a, b) => b[1] - a[1]); }
+    function renderUserTypePills(i, d, t) { const c = document.getElementById(i); if(!c) return; c.innerHTML = d.map(x => `<div onclick="handleUserTypeClick('${x[0]}')" class="user-pill group"><span>${x[0]}</span><div class="badge-container"><span class="badge-num">${x[1]} คน</span><span class="badge-pct">ร้อยละ ${(x[1]/t*100).toFixed(2)}</span></div></div>`).join(''); }
+    function renderTopList(i, d, t) { const e = document.getElementById(i); if(!e) return; e.innerHTML = d.map((x, j) => `<tr><td class="text-center">#${j+1}</td><td><div class="px-3 py-2 rounded-lg border text-xs leading-tight">${x[0]}</div></td><td class="text-right font-bold">${x[1]}</td><td class="text-right"><span class="badge-pct">${(x[1]/t*100).toFixed(2)}</span></td></tr>`).join(''); }
+    function renderCleanDoughnut(i, l, d, t) { 
+        if (charts[i]) charts[i].destroy(); const tot = d.reduce((s, x) => s + x[1], 0); if(document.getElementById(t)) document.getElementById(t).innerText = tot;
+        charts[i] = new Chart(document.getElementById(i).getContext('2d'), { type: 'doughnut', data: { labels: d.map(x => x[0]), datasets: [{ data: d.map(x => x[1]), backgroundColor: ['#0F2C67', '#E65100', '#F59E0B', '#3B82F6', '#10B981'], borderWidth: 0 }] }, options: { plugins: { legend: { display: false } }, cutout: '75%' } });
+        document.getElementById(l).innerHTML = d.map((x, idx) => `<div class="flex justify-between text-[10px] mb-1"><span>${x[0]}</span><span class="font-bold">${x[1]}คน</span></div>`).join('');
+    }
+    function animateValue(i, s, e, d) { if (s === e) return; let o = document.getElementById(i); if(!o) return; let r = e - s, c = s, inc = e > s ? 1 : -1, st = Math.abs(Math.floor(d / r)); let t = setInterval(() => { c += inc; o.innerText = c.toLocaleString(); if (c == e) clearInterval(t); }, Math.max(st, 10)); o.innerText = e.toLocaleString(); }
+  </script>
 </body>
+
 </html>
