@@ -582,7 +582,7 @@
        if(d.length === 0) { e.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-300">ไม่มีข้อมูล</td></tr>'; return; }
        e.innerHTML = d.map((x, j) => {
          let rank = j < 3 ? `<div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${j==0?'bg-yellow-100 text-yellow-700':j==1?'bg-slate-100 text-slate-700':'bg-orange-100 text-orange-700'}">${j+1}</div>` : `#${j+1}`;
-         return `<tr><td class="text-center text-xs text-slate-400">${rank}</td><td><div class="text-xs font-medium text-slate-700 leading-tight line-clamp-2">${x[0]}</div></td><td class="text-right font-bold text-xs">${x[1]}</td><td class="text-right"><span class="badge-pct">${(x[1]/t*100).toFixed(1)}</span></td></tr>`;
+         return `<tr><td class="text-center text-xs text-slate-400">${rank}</td><td><div class="text-xs font-medium text-slate-700 leading-tight line-clamp-2">${x[0]}</div></td><td class="text-right font-bold text-xs">${x[1]}</td><td class="text-right"><span class="badge-pct">${(x[1]/t*100).toFixed(2)}</span></td></tr>`;
        }).join(''); 
     }
 
