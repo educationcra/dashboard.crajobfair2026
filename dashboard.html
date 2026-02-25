@@ -604,7 +604,102 @@ const API_URL ="https://script.google.com/macros/s/AKfycbylyonLUKe_jJjbrtTASPg9R
         if (t.includes("นักศึกษาระดับปริญญาตรี")) {
             c.innerHTML = `<div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-cra-primary mb-4"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><h3 class="text-xl font-bold text-slate-800 mb-2">เลือกกลุ่มนักศึกษา</h3><div class="flex flex-col gap-3 mt-6"><button onclick="selectSubType('student_cra', '${t}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-cra-primary transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-cra-primary">นศ. ราชวิทยาลัยจุฬาภรณ์</div></div><svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button><button onclick="selectSubType('student_general', '${t}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-cra-secondary transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-cra-secondary">นศ. ทั่วไป (สถาบันอื่น)</div></div><svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button></div><button onclick="closeSubModal()" class="mt-8 text-sm text-slate-400 underline">ยกเลิก</button>`;
             m.classList.remove('hidden');
-        } else openDetailModal(t);
+      } else if (type.includes("ปริญญาโท-เอก")) {
+        content.innerHTML = `<div class="mx-auto w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-4"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/></svg></div><h3 class="text-xl font-bold text-slate-800 mb-2">เลือกระดับการศึกษา</h3><div class="flex flex-col gap-3 mt-6"><button onclick="selectSubType('master', '${type}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-emerald-600">ปริญญาโท</div><div class="text-xs text-slate-400">Master's Degree</div></div><svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button><button onclick="selectSubType('doctoral', '${type}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-emerald-600">ปริญญาเอก</div><div class="text-xs text-slate-400">Doctoral Degree</div></div><svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button></div><button onclick="closeSubModal()" class="mt-8 text-sm text-slate-400 underline">ยกเลิก</button>`;
+        modal.classList.remove('hidden');
+      } else if (type.includes("อาจารย์") || type.includes("นักวิชาการ")) {
+        content.innerHTML = `<div class="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-4"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div><h3 class="text-xl font-bold text-slate-800 mb-2">เลือกประเภทบุคลากร</h3><div class="flex flex-col gap-3 mt-6"><button onclick="selectSubType('lecturer_cra', '${type}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-purple-600 transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-purple-600">อาจารย์/นักวิชาการ CRA</div><div class="text-xs text-slate-400">ราชวิทยาลัยจุฬาภรณ์</div></div><svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button><button onclick="selectSubType('lecturer_general', '${type}')" class="group p-4 bg-white border border-slate-200 rounded-xl hover:border-purple-400 transition-all flex items-center justify-between text-left"><div><div class="font-bold text-slate-800 group-hover:text-purple-400">บุคคลภายนอก/ทั่วไป</div><div class="text-xs text-slate-400">สถาบันอื่น</div></div><svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button></div><button onclick="closeSubModal()" class="mt-8 text-sm text-slate-400 underline">ยกเลิก</button>`;
+        modal.classList.remove('hidden');
+      } else {
+        openDetailModal(type);
+      }
+     // ==========================================
+    // [NEW] Smart Grouping & Split Layout Logic
+    // ==========================================
+    const renderSplitCard = (data, idx12, idx13, containerId, countId, dateBadgeId, theme) => {
+        let map12 = new Map();
+        let map13 = new Map();
+        let totalCount = 0;
+
+        // 1. แยกข้อมูล
+        data.forEach(r => {
+            const clean = (t) => { if(!t) return null; let s = t.trim(); return (s.length > 1 && s !== '-' && s !== '.') ? s : null; };
+            
+            let t12 = clean(r[idx12]);
+            if (t12 && (FILTER_DATE === 'All' || FILTER_DATE === '12')) {
+                map12.set(t12, (map12.get(t12) || 0) + 1);
+                totalCount++;
+            }
+            let t13 = clean(r[idx13]);
+            if (t13 && (FILTER_DATE === 'All' || FILTER_DATE === '13')) {
+                map13.set(t13, (map13.get(t13) || 0) + 1);
+                totalCount++;
+            }
+        });
+
+        // อัปเดตหัวการ์ด
+        if(document.getElementById(countId)) document.getElementById(countId).innerText = `${totalCount} ข้อความ`;
+        if(document.getElementById(dateBadgeId)) document.getElementById(dateBadgeId).innerText = FILTER_DATE === 'All' ? 'รวมทั้ง 2 วัน' : `วันที่ ${FILTER_DATE} ก.พ.`;
+
+        // สร้าง HTML ย่อย
+        const createBubble = (txt, count) => {
+            let badgeBg = theme === 'blue' ? 'bg-blue-600' : 'bg-orange-500';
+            let hoverClass = theme === 'blue' ? 'hover:border-blue-300' : 'hover:border-orange-300';
+            let countBadge = count > 1 ? `<div class="${badgeBg} text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm shrink-0 min-w-[24px] text-center mt-1">x${count}</div>` : ``;
+            
+            return `
+            <div class="bg-white border border-slate-100 p-3 rounded-xl shadow-sm ${hoverClass} transition-all duration-200 group flex justify-between items-start gap-3 animate-fade-up mb-3">
+                <p class="text-sm text-slate-700 font-medium leading-relaxed flex-1">"${txt}"</p>
+                ${countBadge}
+            </div>`;
+        };
+
+        const box = document.getElementById(containerId);
+        const getSorted = (m) => Array.from(m.entries()).map(([t, c]) => ({ t, c })).sort((a, b) => b.c - a.c);
+        const list12 = getSorted(map12);
+        const list13 = getSorted(map13);
+
+        if (totalCount === 0) {
+            box.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-300"><svg class="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>ไม่มีข้อเสนอแนะ</span></div>`;
+        } 
+        else if (FILTER_DATE === 'All') {
+            // --- Layout: แบ่งครึ่งซ้ายขวา (Split View) ---
+            let color12 = theme === 'blue' ? 'bg-blue-500' : 'bg-orange-400'; 
+            let color13 = theme === 'blue' ? 'bg-indigo-500' : 'bg-orange-600';
+
+            box.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
+                <div class="flex flex-col h-full border-r border-slate-200 pr-4">
+                    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 sticky top-0 bg-slate-50/30 backdrop-blur-sm z-10">
+                        <span class="w-2 h-2 rounded-full ${color12}"></span>
+                        <h4 class="font-bold text-slate-700">12 ก.พ.</h4>
+                        <span class="text-xs text-slate-400">(${list12.length})</span>
+                    </div>
+                    <div class="flex-1">
+                        ${list12.length ? list12.map(i => createBubble(i.t, i.c)).join('') : '<p class="text-xs text-slate-300 text-center mt-10">- ไม่มีข้อมูล -</p>'}
+                    </div>
+                </div>
+                <div class="flex flex-col h-full pl-2">
+                    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 sticky top-0 bg-slate-50/30 backdrop-blur-sm z-10">
+                        <span class="w-2 h-2 rounded-full ${color13}"></span>
+                        <h4 class="font-bold text-slate-700">13 ก.พ.</h4>
+                        <span class="text-xs text-slate-400">(${list13.length})</span>
+                    </div>
+                    <div class="flex-1">
+                        ${list13.length ? list13.map(i => createBubble(i.t, i.c)).join('') : '<p class="text-xs text-slate-300 text-center mt-10">- ไม่มีข้อมูล -</p>'}
+                    </div>
+                </div>
+            </div>`;
+        } 
+        else {
+            // --- Layout: Grid 2 คอลัมน์ (วันเดียว เต็มจอ) ---
+            const activeList = FILTER_DATE === '12' ? list12 : list13;
+            box.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
+                ${activeList.map(i => createBubble(i.t, i.c)).join('')}
+            </div>`;
+        }
+    };
     }
     function closeSubModal() { document.getElementById('subSelectModal').classList.add('hidden'); }
     function selectSubType(s, t) { closeSubModal(); openDetailModal(t, s); }
